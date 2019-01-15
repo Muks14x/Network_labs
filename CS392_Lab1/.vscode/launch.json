@@ -1,0 +1,12 @@
+{
+    "configurations": [
+
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Assign1",
+            "request": "launch",
+            "mainClass": "Assign1",
+            "console": "integratedTerminal"
+        }
+    ]
+}
