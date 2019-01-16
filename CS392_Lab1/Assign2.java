@@ -2,11 +2,12 @@ import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 
-public class Assign1 {
+public class Assign2 {
     final static int SENT_BY_SOURCE = 1;
     final static int RECIEVED_AT_SWITCH = 2;
     final static int DISPATCH_FROM_SWITCH = 3;
     final static int RECIEVED_AT_SINK = 4;
+    final static int NUMBER_OF_SOURCE = 3;
 
     static int glb_source_id = 0;
     static int glb_packet_id = 0;
@@ -16,59 +17,66 @@ public class Assign1 {
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        int packet_sending_rate;
-        double time_to_process;
-        double medium_delay;
-        double time_to_sink;
-        System.out.println("Enter the packet sending rate (Packets/per second)");
-        packet_sending_rate = sc.nextInt();
-        System.out.println("Enter the delay (Source to switch)");
-        medium_delay = sc.nextDouble();
-        System.out.println("Enter the switch process time");
-        time_to_process = sc.nextDouble();
-        System.out.println("Enter the delay (Switch to sink)");
-        time_to_sink = sc.nextDouble();
+        int[] packet_sending_rate = new int[NUMBER_OF_SOURCE];
+        double time_to_process = 2;
+        double[] d_source_to_switch = new double[NUMBER_OF_SOURCE];
+        double d_time_to_sink = 2 ;
+        double[] time_interval = new double[NUMBER_OF_SOURCE];
+
         System.out.println("Enter the time of simulation");
         int time_of_simulation = 0;
         time_of_simulation = sc.nextInt();
         sc.close();
-        Source src1 = new Source(packet_sending_rate, medium_delay);
-        Switch swtch1 = new Switch(time_to_process, time_to_sink);
-        double time_interval = 1.0 / packet_sending_rate;
+        
+        Source[] src = new Source[NUMBER_OF_SOURCE];
+        Link [] src_2_switch = new Link[NUMBER_OF_SOURCE];
+        Packet[] start_pack = new Packet[NUMBER_OF_SOURCE];
+        ArrayList<Packet> sent_packet = new ArrayList<>();
+        ArrayList<Packet> recieved_packets = new ArrayList<>();
 
-        Packet start_pack = new Packet(src1.id, 0.0);
-        global_Queue.add(new Event(SENT_BY_SOURCE, start_pack,0.0));
 
-        Link src_2_switch = new Link();
+        Switch swtch1 = new Switch(time_to_process, d_time_to_sink);
         Link switch_2_sink = new Link();
        
-        ArrayList<Packet> sent_packet = new ArrayList<>();
-        sent_packet.add(start_pack);
-        ArrayList<Packet> recieved_packets = new ArrayList<>();
-      //  System.out.println(time_interval);
+        //initilaise all the values 
+        for(int l=0 ;l<NUMBER_OF_SOURCE;++l) {
+            packet_sending_rate[l] = ((int)Math.random()*2)+1 ;
+            time_interval[l] = 1.0 /packet_sending_rate[l];
+            d_source_to_switch[l] = ((int)Math.random()*2)+1;
+            src[l] = new Source( packet_sending_rate[l],d_source_to_switch[l]);
+            start_pack[l] = new Packet(src[l].id, 0.0);
+            global_Queue.add(new Event(SENT_BY_SOURCE, start_pack[l], 0.0));
+            sent_packet.add(start_pack[l]);
+            src_2_switch[l] = new Link();
+        }
+
+
+        // System.out.println(time_interval);
         while (glb_time <= time_of_simulation) {
 
             if (!global_Queue.isEmpty()) {
                 Event curr_process = global_Queue.poll();
-              //  System.out.println(curr_process.toString());
+                int curr_process_packet_src_id = curr_process.packet.source_id;
+                curr_process_packet_src_id--;
+                // System.out.println(curr_process.toString());
                 glb_time = curr_process.scheduled_time;
                 switch (curr_process.event_type) {
                 case SENT_BY_SOURCE:
 
-                    if (src_2_switch.curr_packet == null) {
-                        curr_process.scheduled_time += (src1.time_to_switch);
-                        src_2_switch.curr_packet = curr_process.packet;
-                        src_2_switch.checkpoint_reach = curr_process.scheduled_time;
+                    if (src_2_switch[curr_process_packet_src_id].curr_packet == null) {
+                        curr_process.scheduled_time += (src[curr_process_packet_src_id].time_to_switch);
+                        src_2_switch[curr_process_packet_src_id].curr_packet = curr_process.packet;
+                        src_2_switch[curr_process_packet_src_id].checkpoint_reach = curr_process.scheduled_time;
                         curr_process.event_type = RECIEVED_AT_SWITCH;
                         global_Queue.add(curr_process);
                     } else {
-                        curr_process.scheduled_time = src_2_switch.checkpoint_reach;
-                        src_2_switch.checkpoint_reach+=src1.time_to_switch;
+                        curr_process.scheduled_time = src_2_switch[curr_process_packet_src_id].checkpoint_reach;
+                        src_2_switch[curr_process_packet_src_id].checkpoint_reach += src[curr_process_packet_src_id].time_to_switch;
                         global_Queue.add(curr_process);
                     }
                     break;
                 case RECIEVED_AT_SWITCH:
-                    src_2_switch.curr_packet = null;
+                    src_2_switch[curr_process_packet_src_id].curr_packet = null;
                     curr_process.scheduled_time += swtch1.time_to_process;
                     curr_process.event_type = DISPATCH_FROM_SWITCH;
                     global_Queue.add(curr_process);
@@ -83,33 +91,47 @@ public class Assign1 {
                         global_Queue.add(curr_process);
                     } else {
                         curr_process.scheduled_time = switch_2_sink.checkpoint_reach;
-                        switch_2_sink.checkpoint_reach+=swtch1.time_to_sink;
+                        switch_2_sink.checkpoint_reach += swtch1.time_to_sink;
                         global_Queue.add(curr_process);
                     }
                     break;
                 case RECIEVED_AT_SINK:
                     switch_2_sink.curr_packet = null;
                     curr_process.packet.packet_reach_time = glb_time;
-                   // System.out.println(curr_process.packet.packet_id+" "+ curr_process.packet.time_stamp+" "+ curr_process.packet.packet_reach_time);
+                    System.out.println(curr_process.packet.packet_id + " " + curr_process.packet.time_stamp + " "
+                            + curr_process.packet.packet_reach_time);
                     recieved_packets.add(curr_process.packet);
                     break;
                 }
             }
-            Packet newPack = new Packet(src1.id, (sent_packet.size())*time_interval);
-            sent_packet.add(newPack);
-            global_Queue.add(new Event(SENT_BY_SOURCE,newPack, newPack.time_stamp));
+
+            addNewPackets(sent_packet, src, time_interval);
         }
 
-        
-        int n = recieved_packets.size();
-        System.out.println(""+n);
-        double time_delay = 0 ;
-        for(Packet pc: recieved_packets) {
-            System.out.println("Packet_id -> "+ pc.packet_id +" Packet_start-> " + pc.time_stamp + " Packet_end--> "+ pc.packet_reach_time);
-            time_delay+=(pc.packet_reach_time - (pc.time_stamp +src1.time_to_switch +swtch1.time_to_sink+swtch1.time_to_process));
+        int[] n = new int[NUMBER_OF_SOURCE];
+        System.out.println("" + recieved_packets.size());
+        double[] time_delay = new double[NUMBER_OF_SOURCE];
+        for (Packet pc : recieved_packets) {
+            // System.out.println("Packet_id -> "+ pc.source_id +" Packet_start-> " +
+            // pc.time_stamp + " Packet_end--> "+ pc.packet_reach_time);
+            ++n[pc.source_id-1];
+            time_delay[pc.source_id - 1] += (pc.packet_reach_time
+                    - (pc.time_stamp + src[pc.source_id-1].time_to_switch + swtch1.time_to_sink + swtch1.time_to_process));
         }
-        time_delay/=n;
-        System.out.println("The time delay is: "+time_delay );
+
+        for(int i=0;i<NUMBER_OF_SOURCE;++i) {
+            System.out.println("The time delay for source "+(i+1)+" "+ time_delay[i]/n[i]);
+        }
+    }
+
+    public static void addNewPackets(ArrayList<Packet> sent_packet, Source[]src, double[] time_interval) {
+        int n = sent_packet.size();
+        n/=NUMBER_OF_SOURCE;
+        for(int i=0;i<NUMBER_OF_SOURCE;++i) {
+            Packet newPack = new Packet(src[i].id, n*time_interval[i]);
+            sent_packet.add(newPack);
+            global_Queue.add(new Event(SENT_BY_SOURCE, newPack, newPack.time_stamp));
+        }
     }
 
     static class Source {
@@ -149,7 +171,7 @@ public class Assign1 {
 
         @Override
         public String toString() {
-            return "packet id-> "+this.packet_id+ "time_stamp -> "+this.time_stamp ;
+            return "packet id-> " + this.packet_id + "time_stamp -> " + this.time_stamp;
         }
     }
 
@@ -186,7 +208,8 @@ public class Assign1 {
 
         @Override
         public String toString() {
-            return "Event id -> "+ this.event_id + "Event type -> "+ this.event_type + " Scheduled time -> "+ this.scheduled_time + this.packet.toString();
+            return "Event id -> " + this.event_id + "Event type -> " + this.event_type + " Scheduled time -> "
+                    + this.scheduled_time + this.packet.toString();
         }
 
     }

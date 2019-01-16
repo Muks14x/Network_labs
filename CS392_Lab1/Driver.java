@@ -81,7 +81,7 @@ public class Driver{
     
                             curr_process.scheduled_time += swtch1.time_to_sink;
                             switch_2_sink.curr_packet = curr_process.packet;
-                            src_2_switch.checkpoint_reach = curr_process.scheduled_time;
+                            switch_2_sink.checkpoint_reach = curr_process.scheduled_time;
                             curr_process.event_type = RECIEVED_AT_SINK;
                             global_Queue.add(curr_process);
                         } else {
@@ -179,7 +179,9 @@ public class Driver{
                 return 1;
             } else if (this.event_type > e.event_type) {
                 return -1;
-            } else if(this.packet.packet_id > e.packet.packet_id) {
+            } else if (this.event_type < e.event_type) {
+                 return 1;   
+            }  else if(this.packet.packet_id > e.packet.packet_id) {
                 return 1;
             } else {
                 return -1;
