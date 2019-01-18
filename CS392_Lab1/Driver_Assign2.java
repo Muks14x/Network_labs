@@ -16,16 +16,17 @@ public class Driver_Assign2 {
     static PriorityQueue<Event> global_Queue = new PriorityQueue<>();
 
     public static void main(String[] args) {
-        for (int u = 0; u < 1000; u++) {
+        for (int u = 0; u < 500; u++) {
             glb_source_id =0 ; glb_time=0 ;glb_packet_id=0 ;glb_source_id =0 ;
             global_Queue.clear();    
 
        // Scanner sc = new Scanner(System.in);
         int[] packet_sending_rate = new int[NUMBER_OF_SOURCE];
-        double time_to_process = 2;
+        double time_to_process = 0;
         double[] d_source_to_switch = new double[NUMBER_OF_SOURCE];
         double d_time_to_sink = 4 ;
         double[] time_interval = new double[NUMBER_OF_SOURCE];
+        double[] delay = new double[NUMBER_OF_SOURCE];
 
         //System.out.println("Enter the time of simulation");
         int time_of_simulation = 0;
@@ -74,6 +75,7 @@ public class Driver_Assign2 {
                         curr_process.event_type = RECIEVED_AT_SWITCH;
                         global_Queue.add(curr_process);
                     } else {
+                        delay[curr_process_packet_src_id]+=(src_2_switch[curr_process_packet_src_id].checkpoint_reach-curr_process.scheduled_time);
                         curr_process.scheduled_time = src_2_switch[curr_process_packet_src_id].checkpoint_reach;
                         src_2_switch[curr_process_packet_src_id].checkpoint_reach += src[curr_process_packet_src_id].time_to_switch;
                         global_Queue.add(curr_process);
@@ -94,6 +96,7 @@ public class Driver_Assign2 {
                         curr_process.event_type = RECIEVED_AT_SINK;
                         global_Queue.add(curr_process);
                     } else {
+                        delay[curr_process_packet_src_id]+=(switch_2_sink.checkpoint_reach-curr_process.scheduled_time);
                         curr_process.scheduled_time = switch_2_sink.checkpoint_reach;
                         switch_2_sink.checkpoint_reach += swtch1.time_to_sink;
                         global_Queue.add(curr_process);
@@ -112,17 +115,17 @@ public class Driver_Assign2 {
 
         int[] n = new int[NUMBER_OF_SOURCE];
       //  System.out.println("" + recieved_packets.size());
-        double[] time_delay = new double[NUMBER_OF_SOURCE];
+        //double[] time_delay = new double[NUMBER_OF_SOURCE];
         for (Packet pc : recieved_packets) {
             // System.out.println("Packet_id -> "+ pc.source_id +" Packet_start-> " +
             // pc.time_stamp + " Packet_end--> "+ pc.packet_reach_time);
             ++n[pc.source_id-1];
-            time_delay[pc.source_id - 1] += (pc.packet_reach_time
-                    - (pc.time_stamp + src[pc.source_id-1].time_to_switch + swtch1.time_to_sink + swtch1.time_to_process));
+            // time_delay[pc.source_id - 1] += (pc.packet_reach_time
+            //         - (pc.time_stamp + src[pc.source_id-1].time_to_switch + swtch1.time_to_sink + swtch1.time_to_process));
         }
 
         for(int i=0;i<NUMBER_OF_SOURCE;++i) {
-            System.out.print(time_delay[i]/n[i] +",");
+            System.out.print(delay[i]/n[i] +",");
         }
         System.out.println();
     }

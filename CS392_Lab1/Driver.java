@@ -28,9 +28,9 @@ public class Driver{
            // System.out.println("Enter the delay (Source to switch)");
             medium_delay = 4;
             //System.out.println("Enter the switch process time");
-            time_to_process = 2;
+            time_to_process = 0;
             //System.out.println("Enter the delay (Switch to sink)");
-            time_to_sink = 4;
+            time_to_sink = 6;
            // System.out.println("Enter the time of simulation");
             int time_of_simulation = 0;
             time_of_simulation = 1500;
@@ -48,6 +48,7 @@ public class Driver{
             ArrayList<Packet> sent_packet = new ArrayList<>();
             sent_packet.add(start_pack);
             ArrayList<Packet> recieved_packets = new ArrayList<>();
+            double delay = 0.0;
           //  System.out.println(time_interval);
             while (glb_time <= time_of_simulation) {
     
@@ -65,6 +66,7 @@ public class Driver{
                             curr_process.event_type = RECIEVED_AT_SWITCH;
                             global_Queue.add(curr_process);
                         } else {
+                            delay+=(src_2_switch.checkpoint_reach-curr_process.scheduled_time);
                             curr_process.scheduled_time = src_2_switch.checkpoint_reach;
                             src_2_switch.checkpoint_reach+=src1.time_to_switch;
                             global_Queue.add(curr_process);
@@ -85,6 +87,7 @@ public class Driver{
                             curr_process.event_type = RECIEVED_AT_SINK;
                             global_Queue.add(curr_process);
                         } else {
+                            delay+=(switch_2_sink.checkpoint_reach-curr_process.scheduled_time);
                             curr_process.scheduled_time = switch_2_sink.checkpoint_reach;
                             switch_2_sink.checkpoint_reach+=swtch1.time_to_sink;
                             global_Queue.add(curr_process);
@@ -103,16 +106,9 @@ public class Driver{
                 global_Queue.add(new Event(SENT_BY_SOURCE,newPack, newPack.time_stamp));
             }
     
-            
-            int n = recieved_packets.size();
-           // System.out.println(""+n);
-            double time_delay = 0 ;
-            for(Packet pc: recieved_packets) {
-               // System.out.println("Packet_id -> "+ pc.source_id +" Packet_start-> " + pc.time_stamp + " Packet_end--> "+ pc.packet_reach_time);
-                time_delay+=(pc.packet_reach_time - (pc.time_stamp +src1.time_to_switch +swtch1.time_to_sink+swtch1.time_to_process));
-            }
-            time_delay/=n;
-            System.out.println(time_delay);
+           int n=recieved_packets.size() ;
+          
+            System.out.println(delay/n);
         }
     }
 

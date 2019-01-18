@@ -20,7 +20,7 @@ public class Assign2 {
         int[] packet_sending_rate = new int[NUMBER_OF_SOURCE];
         double time_to_process = 2;
         double[] d_source_to_switch = new double[NUMBER_OF_SOURCE];
-        double d_time_to_sink = 2 ;
+        double d_time_to_sink = 3 ;
         double[] time_interval = new double[NUMBER_OF_SOURCE];
 
         System.out.println("Enter the time of simulation");
@@ -37,12 +37,14 @@ public class Assign2 {
 
         Switch swtch1 = new Switch(time_to_process, d_time_to_sink);
         Link switch_2_sink = new Link();
-       
+        double[] delay = new double[NUMBER_OF_SOURCE];
         //initilaise all the values 
         for(int l=0 ;l<NUMBER_OF_SOURCE;++l) {
-            packet_sending_rate[l] = ((int)Math.random()*2)+1 ;
+           // packet_sending_rate[l] = ((int)Math.random()*2)+1 ;
+            packet_sending_rate[l] = 3 ;
             time_interval[l] = 1.0 /packet_sending_rate[l];
-            d_source_to_switch[l] = ((int)Math.random()*2)+1;
+            //d_source_to_switch[l] = ((int)Math.random()*2)+1;
+            d_source_to_switch[l] = 2;
             src[l] = new Source( packet_sending_rate[l],d_source_to_switch[l]);
             start_pack[l] = new Packet(src[l].id, 0.0);
             global_Queue.add(new Event(SENT_BY_SOURCE, start_pack[l], 0.0));
@@ -70,6 +72,7 @@ public class Assign2 {
                         curr_process.event_type = RECIEVED_AT_SWITCH;
                         global_Queue.add(curr_process);
                     } else {
+                        delay[curr_process_packet_src_id]+=(src_2_switch[curr_process_packet_src_id].checkpoint_reach-curr_process.scheduled_time);
                         curr_process.scheduled_time = src_2_switch[curr_process_packet_src_id].checkpoint_reach;
                         src_2_switch[curr_process_packet_src_id].checkpoint_reach += src[curr_process_packet_src_id].time_to_switch;
                         global_Queue.add(curr_process);
@@ -90,6 +93,7 @@ public class Assign2 {
                         curr_process.event_type = RECIEVED_AT_SINK;
                         global_Queue.add(curr_process);
                     } else {
+                        delay[curr_process_packet_src_id]+=(switch_2_sink.checkpoint_reach-curr_process.scheduled_time);
                         curr_process.scheduled_time = switch_2_sink.checkpoint_reach;
                         switch_2_sink.checkpoint_reach += swtch1.time_to_sink;
                         global_Queue.add(curr_process);
@@ -115,12 +119,12 @@ public class Assign2 {
             // System.out.println("Packet_id -> "+ pc.source_id +" Packet_start-> " +
             // pc.time_stamp + " Packet_end--> "+ pc.packet_reach_time);
             ++n[pc.source_id-1];
-            time_delay[pc.source_id - 1] += (pc.packet_reach_time
-                    - (pc.time_stamp + src[pc.source_id-1].time_to_switch + swtch1.time_to_sink + swtch1.time_to_process));
+            // time_delay[pc.source_id - 1] += (pc.packet_reach_time
+            //         - (pc.time_stamp + src[pc.source_id-1].time_to_switch + swtch1.time_to_sink + swtch1.time_to_process));
         }
 
         for(int i=0;i<NUMBER_OF_SOURCE;++i) {
-            System.out.println("The time delay for source "+(i+1)+" "+ time_delay[i]/n[i]);
+            System.out.println("The time delay for source "+(i+1)+" "+ delay[i]/n[i]);
         }
     }
 

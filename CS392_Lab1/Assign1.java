@@ -45,6 +45,7 @@ public class Assign1 {
         ArrayList<Packet> sent_packet = new ArrayList<>();
         sent_packet.add(start_pack);
         ArrayList<Packet> recieved_packets = new ArrayList<>();
+        double delay = 0.0 ;
       //  System.out.println(time_interval);
         while (glb_time <= time_of_simulation) {
 
@@ -62,6 +63,7 @@ public class Assign1 {
                         curr_process.event_type = RECIEVED_AT_SWITCH;
                         global_Queue.add(curr_process);
                     } else {
+                        delay+=(src_2_switch.checkpoint_reach-curr_process.scheduled_time);
                         curr_process.scheduled_time = src_2_switch.checkpoint_reach;
                         src_2_switch.checkpoint_reach+=src1.time_to_switch;
                         global_Queue.add(curr_process);
@@ -82,6 +84,7 @@ public class Assign1 {
                         curr_process.event_type = RECIEVED_AT_SINK;
                         global_Queue.add(curr_process);
                     } else {
+                        delay+=(switch_2_sink.checkpoint_reach-curr_process.scheduled_time);
                         curr_process.scheduled_time = switch_2_sink.checkpoint_reach;
                         switch_2_sink.checkpoint_reach+=swtch1.time_to_sink;
                         global_Queue.add(curr_process);
@@ -102,14 +105,7 @@ public class Assign1 {
 
         
         int n = recieved_packets.size();
-        System.out.println(""+n);
-        double time_delay = 0 ;
-        for(Packet pc: recieved_packets) {
-            System.out.println("Packet_id -> "+ pc.packet_id +" Packet_start-> " + pc.time_stamp + " Packet_end--> "+ pc.packet_reach_time);
-            time_delay+=(pc.packet_reach_time - (pc.time_stamp +src1.time_to_switch +swtch1.time_to_sink+swtch1.time_to_process));
-        }
-        time_delay/=n;
-        System.out.println("The time delay is: "+time_delay );
+        System.out.println("The time delay is: "+delay/n);
     }
 
     static class Source {
